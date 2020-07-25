@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     for columns in train_df.columns:
         lbl = preprocessing.LabelEncoder()
-        train_df.loc[:, columns] = train_df.loc[:, columns].astyp e(    str).fillna("NONE")
+        train_df.loc[:, columns] = train_df.loc[:, columns].astype(str).fillna("NONE")
         valid_df.loc[:, columns] = valid_df.loc[:, columns].astype(str).fillna("NONE")
         df_test.loc[:, columns] = df_test.loc[:, columns].astype(str).fillna("NONE")
 
