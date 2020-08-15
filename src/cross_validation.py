@@ -6,8 +6,8 @@ from sklearn import model_selection
     - binary classification
     - multi class classification
     - multi label classification
-    - single column regression
-    - multi column regression
+    - single_column_regression
+    - multi_column_regression
     - holdout 
 
 """
@@ -39,7 +39,7 @@ class Cross_validation:
 
 
     def split(self):
-        if self.problem_type in ["binary_classification", "multiclass_classification"]:
+        if self.problem_type in ("binary_classification", "multiclass_classification"):
             target = self.target_cols[0]
             unique_values = self.dataframe[target].nunique()
             if unique_values == 1:
@@ -49,6 +49,18 @@ class Cross_validation:
                 for folds, (train_idx, valid_idx) in enumerate(kf.split(X = self.dataframe, y=self.dataframe[target].values)):
                     print("train_idx : ", len(train_idx), "test_idx :", len(valid_idx))
                     self.dataframe.loc[valid_idx, "kfold"] = folds
+
+        elif self.problem_type in ("single_column_regression", "multi_column_regression"):
+            if self.num_target != 1 and self.problem_type == "single_column_regression":
+                raise Exception ("Invalid number of probelm for this problem type")
+            if self.num_target <2 and self.problem_type == "multi_column_regression":
+                raise Exception ("invalid number of targets for this problem type")
+            kf = model_selection.KFold(n_splits = self.num_folds)
+            for folds, (train_idx, valid_idx) in enumerate(kf.split(X = self.dataframe)):
+                self.dataframe.loc[valid_idx, "kfold"] = folds
+
+        
+
         print(self.dataframe)
         return self.dataframe
 
