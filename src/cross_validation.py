@@ -20,6 +20,7 @@ class Cross_validation:
         df, 
         target_cols, 
         problem_type = "binary_classification",
+        mulitlabel_delimiter = ",",
         num_folds = 5,
         shuffle = True,
         random_state = 42
@@ -28,6 +29,7 @@ class Cross_validation:
         self.target_cols = target_cols
         self.num_target = len(target_cols)
         self.problem_type = problem_type
+        self.mulitlabel_delimiter = mulitlabel_delimiter
         self.num_folds = num_folds
         self.shuffle = shuffle
         self.random_state = random_state
@@ -59,6 +61,26 @@ class Cross_validation:
             for folds, (train_idx, valid_idx) in enumerate(kf.split(X = self.dataframe)):
                 self.dataframe.loc[valid_idx, "kfold"] = folds
 
+            
+        elif self.problem_type.startswith("holdout_"):
+            holdout_percentage = int(self.problem_type.split("_")[1])
+            num_holdout_samples = int(len(self.dataframe) * holdout_percentage/100)
+            self.dataframe.loc[:len(self.dataframe) - num_holdout_samples, "kfold"] = 1
+            self.dataframe.loc[len(self.dataframe) - num_holdout_samples:, "kfold"] = 0
+
+        
+        elif self.problem_type == "multilabel_classification":
+            if self.num_target != 1:
+                raise Exception("invalid number of targets for this problem type")
+            targets = self.dataframe[self.target_cols[0]].apply(lambda x :  len(str(x).split(self.mulitlabel_delimiter)))
+            kf = model_selection.StratifiedKFold(n_splits=self.num_folds)
+            for folds, (train_idx, valid_idx) in enumerate(kf.split(X = self.dataframe, y=targets)):
+                self.dataframe.loc[valid_idx, "kfold"] == folds
+
+
+        else:
+            raise Exception("Problem type is not understood")
+
         
 
         print(self.dataframe)
@@ -66,7 +88,8 @@ class Cross_validation:
 
 if __name__ == "__main__":
     df = pd.read_csv("../input/train.csv")
-    cv = Cross_validation(df, target_cols=['target'])
+    cv = Cross_validation(df, target_cols=['target'],  problem_type="holdout_10")
     df_split = cv.split()
-
+    print(df_split.head())
+    print(df_split['kfold'].value_counts()) 
         
